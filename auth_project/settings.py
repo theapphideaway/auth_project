@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-^7sqaej58@q!r2qn@*!#it%@aq=^eoni96jp!%64)a$=b$f7$z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['ianschoenrock.pythonanywhere.com']
+ALLOWED_HOSTS = ['ianschoenrock.pythonanywhere.com', 'localhost']
 
 AUTHENTICATION_BACKENDS = [
     'api.authentication_backends.EmailBackend',
