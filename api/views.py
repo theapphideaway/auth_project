@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.generics import get_object_or_404
@@ -57,7 +57,11 @@ def login(request):
         return Response({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     # You can generate and return a token here if you're using token-based authentication.
-    return Response({'message': 'Login successful.'})
+
+    response = HttpResponse("Logged in successfully")
+    response.set_cookie('user_id_cookie', user.id)
+    print('USER ID: ' + str(user.id))
+    return response
 
 
 class EmailBackend(ModelBackend):
@@ -77,7 +81,7 @@ class EmailBackend(ModelBackend):
         except UserProfile.DoesNotExist:
             return None
 
-    def get_users(self,):
+    def get_users(self, ):
         try:
             return UserProfile.objects.all()
         except UserProfile.DoesNotExist:
@@ -120,7 +124,8 @@ def save_word(request, user_id, *args, **kwargs):
         serializer = SavedWordSerializer(data=request.data)
         if serializer.is_valid():
             saved_word = serializer.save(user=user)
-            return Response({"message": "Word saved successfully.", "id": saved_word.id}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Word saved successfully.", "id": saved_word.id},
+                            status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'GET':
@@ -129,4 +134,36 @@ def save_word(request, user_id, *args, **kwargs):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+def get_profile(request):
+    try:
+        cookie = request.COOKIES['user_id_cookie']
 
+        if cookie:
+            return JsonResponse({"cookie_name": cookie})
+        else:
+            return JsonResponse({"cookie_name": "UNAVAILABLE"})
+
+    except:
+        return JsonResponse({"cookie_name": "UNAVAILABLE"})
+
+
+@api_view(['GET'])
+def get_cookie(request):
+    try:
+        cookie = request.COOKIES['cookie_name']
+
+        if cookie:
+            return JsonResponse({"cookie_name": cookie})
+        else:
+            return JsonResponse({"cookie_name": "UNAVAILABLE"})
+
+    except:
+        return JsonResponse({"cookie_name": "UNAVAILABLE"})
+
+
+@api_view(['POST'])
+def set_cookie(request, user_id):
+    response = HttpResponse("Setting the cookie")
+    response.set_cookie('cookie_name', 'cookie_value: ' + str(user_id))
+    return response
